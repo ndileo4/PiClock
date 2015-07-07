@@ -26,72 +26,78 @@ def tick():
     global datex, datex2, datey2
     
     now = datetime.datetime.now()
-    angle = now.second * 6
-    ts = secpixmap.size()
-    secpixmap2 = secpixmap.transformed(
-        QtGui.QMatrix().scale(
-                float(clockrect.width())/ts.height(),
-                float(clockrect.height())/ts.height()
-                ).rotate(angle),
-            Qt.SmoothTransformation
-        )
-    sechand.setPixmap(secpixmap2)
-    ts = secpixmap2.size()
-    sechand.setGeometry(
-        clockrect.center().x()-ts.width()/2,
-        clockrect.center().y()-ts.height()/2,
-        ts.width(),
-        ts.height()
-    )
-    if now.minute != lastmin:
-        lastmin = now.minute
-        angle = now.minute * 6
-        ts = minpixmap.size()
-        minpixmap2 = minpixmap.transformed(
-                QtGui.QMatrix().scale(
-                    float(clockrect.width())/ts.height(),
-                    float(clockrect.height())/ts.height()
-                    ).rotate(angle),
-                Qt.SmoothTransformation
-            )
-        minhand.setPixmap(minpixmap2)
-        ts = minpixmap2.size()
-        minhand.setGeometry(
-            clockrect.center().x()-ts.width()/2,
-            clockrect.center().y()-ts.height()/2,
-            ts.width(),
-            ts.height()
-        )
-        
-        angle = ((now.hour % 12) + now.minute / 60.0) * 30.0
-        ts = hourpixmap.size()
-        hourpixmap2 = hourpixmap.transformed(
-                QtGui.QMatrix().scale(
-                    float(clockrect.width())/ts.height(),
-                    float(clockrect.height())/ts.height()
-                    ).rotate(angle),
-                Qt.SmoothTransformation
-            )
-        hourhand.setPixmap(hourpixmap2)
-        ts = hourpixmap2.size()
-        hourhand.setGeometry(
-            clockrect.center().x()-ts.width()/2,
-            clockrect.center().y()-ts.height()/2,
-            ts.width(),
-            ts.height()
-        )
-        # date
-        sup = 'th'
-        if (now.day == 1 or now.day == 21 or now.day == 31): sup = 'st'
-        if (now.day == 2 or now.day == 22): sup = 'nd'
-        if (now.day == 3 or now.day == 23): sup = 'rd'
-        ds = "{0:%A %B} {0.day}<sup>".format(now)+sup+"</sup> {0.year}".format(now)
-        datex.setText(ds)
-        datex2.setText(ds)
-        datey2.setText("{0:%I:%M %p}".format(now))
- 
 
-    
+    # date
+    sup = 'th'
+    if (now.day == 1 or now.day == 21 or now.day == 31): sup = 'st'
+    if (now.day == 2 or now.day == 22): sup = 'nd'
+    if (now.day == 3 or now.day == 23): sup = 'rd'
+
+    ds = '{0:%a %b} {0.day}<sup>'.format(now)+sup+"</sup> {0.year}".format(now)
+    print type(ds)
+    datex.setText(ds)
+    datex2.setText(ds)
+    datey2.setText("{0:%I:%M %p}".format(now))
+
+    if Config.analog_digital == 'analog':
+        angle = now.second * 6
+        ts = secpixmap.size()
+        secpixmap2 = secpixmap.transformed(
+            QtGui.QMatrix().scale(
+                    float(clockrect.width())/ts.height(),
+                    float(clockrect.height())/ts.height()
+                    ).rotate(angle),
+                Qt.SmoothTransformation
+            )
+        sechand.setPixmap(secpixmap2)
+        ts = secpixmap2.size()
+        sechand.setGeometry(
+            clockrect.center().x()-ts.width()/2,
+            clockrect.center().y()-ts.height()/2,
+            ts.width(),
+            ts.height()
+        )
+        if now.minute != lastmin:
+            lastmin = now.minute
+            angle = now.minute * 6
+            ts = minpixmap.size()
+            minpixmap2 = minpixmap.transformed(
+                    QtGui.QMatrix().scale(
+                        float(clockrect.width())/ts.height(),
+                        float(clockrect.height())/ts.height()
+                        ).rotate(angle),
+                    Qt.SmoothTransformation
+                )
+            minhand.setPixmap(minpixmap2)
+            ts = minpixmap2.size()
+            minhand.setGeometry(
+                clockrect.center().x()-ts.width()/2,
+                clockrect.center().y()-ts.height()/2,
+                ts.width(),
+                ts.height()
+            )
+
+            angle = ((now.hour % 12) + now.minute / 60.0) * 30.0
+            ts = hourpixmap.size()
+            hourpixmap2 = hourpixmap.transformed(
+                    QtGui.QMatrix().scale(
+                        float(clockrect.width())/ts.height(),
+                        float(clockrect.height())/ts.height()
+                        ).rotate(angle),
+                    Qt.SmoothTransformation
+                )
+            hourhand.setPixmap(hourpixmap2)
+            ts = hourpixmap2.size()
+            hourhand.setGeometry(
+                clockrect.center().x()-ts.width()/2,
+                clockrect.center().y()-ts.height()/2,
+                ts.width(),
+                ts.height()
+            )
+    else:
+        datey.setText("{0:%-I:%M %p}".format(now))
+
+
 def tempfinished():
     global tempreply, temp
     if tempreply.error() != QNetworkReply.NoError: return
@@ -168,7 +174,8 @@ def wxfinished():
         wxiconpixmap = QtGui.QPixmap(Config.icons+"/"+icp+f['icon']+".png")
         icon.setPixmap(wxiconpixmap.scaled(icon.width(),icon.height(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
         wx = fl.findChild(QtGui.QLabel,"wx")
-        wx.setText(f['condition'])
+        weatherStr = checkWeatherStr(f['condition'])
+        wx.setText(weatherStr)
         day = fl.findChild(QtGui.QLabel,"day")
         day.setText(f['FCTTIME']['weekday_name']+' '+f['FCTTIME']['civil'])
         wx2 = fl.findChild(QtGui.QLabel,"wx2")
@@ -198,7 +205,8 @@ def wxfinished():
         wxiconpixmap = QtGui.QPixmap(Config.icons+"/"+f['icon']+".png")
         icon.setPixmap(wxiconpixmap.scaled(icon.width(),icon.height(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
         wx = fl.findChild(QtGui.QLabel,"wx")
-        wx.setText(f['conditions'])
+        weatherStr = checkWeatherStr(f['conditions'])
+        wx.setText(weatherStr)
         day = fl.findChild(QtGui.QLabel,"day")
         day.setText(f['date']['weekday'])
         wx2 = fl.findChild(QtGui.QLabel,"wx2")
@@ -236,7 +244,17 @@ def getwx():
 
 def getallwx():
     getwx()
-    
+
+def checkWeatherStr(weather_string):
+    # return shortened weather string if necessary
+    if weather_string == "Chance of Freezing Rain":
+        weather_string = "Chance of Sleet"
+    if weather_string == "Chance of Thunderstorms":
+        weather_string = "Chance of T-Storms"
+    if weather_string == "Chance of a Thunderstorm":
+        weather_string = "Chance of T-Storms"
+    return weather_string
+
 def qtstart():
     global ctimer, wxtimer, temptimer
     global manager
@@ -523,7 +541,9 @@ except AttributeError: Config.weather_refresh = 30   #minutes
 try: Config.radar_refresh
 except AttributeError: Config.radar_refresh = 10    #minutes
 
-# 
+try: Config.analog_digital
+except AttributeError: Config.analog_digital = 'analog'    #minutes
+
 
 lastmin = -1
 weatherplayer = None
@@ -584,30 +604,39 @@ squares2.setObjectName("squares2")
 squares2.setGeometry(width-xscale*340,0,xscale*340,yscale*900)
 squares2.setStyleSheet("#squares2 { background-color: transparent; border-image: url("+Config.squares2+") 0 0 0 0 stretch stretch;}")
 
-clockface = QtGui.QFrame(frame1)
-clockface.setObjectName("clockface")
-clockrect = QtCore.QRect(width/2-height*.4, height*.45-height*.4,height * .8, height * .8)
-clockface.setGeometry(clockrect)
-clockface.setStyleSheet("#clockface { background-color: transparent; border-image: url("+Config.clockface+") 0 0 0 0 stretch stretch;}")
+# Only set up analog clock on main page if desired
+if Config.analog_digital == 'analog':
+    clockface = QtGui.QFrame(frame1)
+    clockface.setObjectName("clockface")
+    clockrect = QtCore.QRect(width/2-height*.4, height*.45-height*.4,height * .8, height * .8)
+    clockface.setGeometry(clockrect)
+    clockface.setStyleSheet("#clockface { background-color: transparent; border-image: url("+Config.clockface+") 0 0 0 0 stretch stretch;}")
 
-hourhand = QtGui.QLabel(frame1)
-hourhand.setObjectName("hourhand")
-hourhand.setStyleSheet("#hourhand { background-color: transparent; }")
+    hourhand = QtGui.QLabel(frame1)
+    hourhand.setObjectName("hourhand")
+    hourhand.setStyleSheet("#hourhand { background-color: transparent; }")
 
-minhand = QtGui.QLabel(frame1)
-minhand.setObjectName("minhand")
-minhand.setStyleSheet("#minhand { background-color: transparent; }")
+    minhand = QtGui.QLabel(frame1)
+    minhand.setObjectName("minhand")
+    minhand.setStyleSheet("#minhand { background-color: transparent; }")
 
-sechand = QtGui.QLabel(frame1)
-sechand.setObjectName("sechand")
-sechand.setStyleSheet("#sechand { background-color: transparent; }")
+    sechand = QtGui.QLabel(frame1)
+    sechand.setObjectName("sechand")
+    sechand.setStyleSheet("#sechand { background-color: transparent; }")
 
-hourpixmap = QtGui.QPixmap(Config.hourhand)
-hourpixmap2 = QtGui.QPixmap(Config.hourhand)
-minpixmap = QtGui.QPixmap(Config.minhand)
-minpixmap2 = QtGui.QPixmap(Config.minhand)
-secpixmap = QtGui.QPixmap(Config.sechand)
-secpixmap2 = QtGui.QPixmap(Config.sechand)
+    hourpixmap = QtGui.QPixmap(Config.hourhand)
+    hourpixmap2 = QtGui.QPixmap(Config.hourhand)
+    minpixmap = QtGui.QPixmap(Config.minhand)
+    minpixmap2 = QtGui.QPixmap(Config.minhand)
+    secpixmap = QtGui.QPixmap(Config.sechand)
+    secpixmap2 = QtGui.QPixmap(Config.sechand)
+
+else:
+    datey = QtGui.QLabel(frame1)
+    datey.setObjectName("datey")
+    datey.setStyleSheet("#datey { font: arial; color: "+Config.textcolor+"; background-color: transparent; font-size: "+str(int(100*xscale))+"px }")
+    datey.setAlignment(Qt.AlignHCenter | Qt.AlignTop);
+    datey.setGeometry(0,round(height*0.15),width,200)
 
 radar1rect = QtCore.QRect(3*xscale, 344*yscale, 300*xscale, 275*yscale)
 objradar1 = Radar(frame1, Config.radar1, radar1rect, "radar1")
@@ -624,9 +653,9 @@ objradar1 = Radar(frame1, Config.radar1, radar1rect, "radar1")
 
 datex = QtGui.QLabel(frame1)
 datex.setObjectName("datex")
-datex.setStyleSheet("#datex { font-family:sans-serif; color: "+Config.textcolor+"; background-color: transparent; font-size: "+str(int(50*xscale))+"px }")
+datex.setStyleSheet("#datex { font: arial; color: "+Config.textcolor+"; background-color: transparent; font-size: "+str(int(50*xscale))+"px }")
 datex.setAlignment(Qt.AlignHCenter | Qt.AlignTop);
-datex.setGeometry(0,0,width,100)
+datex.setGeometry(0,round(height*0.05),width,100)
 
 datex2 = QtGui.QLabel(frame2)
 datex2.setObjectName("datex2")
