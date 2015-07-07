@@ -34,7 +34,6 @@ def tick():
     if (now.day == 3 or now.day == 23): sup = 'rd'
 
     ds = '{0:%a %b} {0.day}<sup>'.format(now)+sup+"</sup> {0.year}".format(now)
-    print type(ds)
     datex.setText(ds)
     datex2.setText(ds)
     datey2.setText("{0:%I:%M %p}".format(now))
@@ -138,30 +137,32 @@ def wxfinished():
     wxicon2.setPixmap(wxiconpixmap.scaled(wxicon.width(),wxicon.height(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
     wxdesc.setText(f['weather'])
     wxdesc2.setText(f['weather'])
-    
+
     if Config.metric:
         temper.setText(str(f['temp_c'])+u'°C')
         temper2.setText(str(f['temp_c'])+u'°C')
-        press.setText("Pressure "+f['pressure_mb']+' '+f['pressure_trend'])
-        humidity.setText("Humidity "+f['relative_humidity'])
-        wind.setText('Wind '+f['wind_dir']+' '+str(f['wind_kph'])+' gusting '+str(f['wind_gust_kph']))
-        wind2.setText("Feels like "+str(f['feelslike_c']) )
+        wind2.setText("Feels like "+str(f['feelslike_c'])+u'°C' )
     else:
         temper.setText(str(f['temp_f'])+u'°F')
         temper2.setText(str(f['temp_f'])+u'°F')
-        press.setText("Pressure "+f['pressure_in']+' '+f['pressure_trend'])
-        humidity.setText("Humidity "+f['relative_humidity'])
-        wind.setText('Wind '+f['wind_dir']+' '+str(f['wind_mph'])+' gusting '+str(f['wind_gust_mph']))
-        wind2.setText("Feels like "+str(f['feelslike_f']) )
-        
-    wdate.setText("{0:%H:%M}".format(datetime.datetime.fromtimestamp(int(f['local_epoch']))))
-    bottom.setText('Sun Rise:'+
-                wxdata['sun_phase']['sunrise']['hour']+':'+wxdata['sun_phase']['sunrise']['minute']+
-                ' Set:'+
-                wxdata['sun_phase']['sunset']['hour']+':'+wxdata['sun_phase']['sunset']['minute']+
-                ' Moon Phase: '+
-                wxdata['moon_phase']['phaseofMoon']    
-                )
+        wind2.setText("Feels like "+str(f['feelslike_f'])+u'°F' )
+
+    sunrise_ds = wxdata['sun_phase']['sunrise']['hour']+':'+wxdata['sun_phase']['sunrise']['minute']
+    d = datetime.datetime.strptime(sunrise_ds, "%H:%M")
+    sunriseText.setText(d.strftime("%I:%M"))
+
+    sunset_ds = wxdata['sun_phase']['sunset']['hour']+':'+wxdata['sun_phase']['sunset']['minute']
+    d = datetime.datetime.strptime(sunset_ds, "%H:%M")
+    sunsetText.setText(d.strftime("%I:%M"))
+
+    # bottom.setText('Sun Rise:'+
+    #             wxdata['sun_phase']['sunrise']['hour']+':'+wxdata['sun_phase']['sunrise']['minute']+
+    #             ' Set:'+
+    #             wxdata['sun_phase']['sunset']['hour']+':'+wxdata['sun_phase']['sunset']['minute']+
+    #             ' Moon Phase: '+
+    #             wxdata['moon_phase']['phaseofMoon']
+    #             )
+
                 
     for i in range(0,3):
         f = wxdata['hourly_forecast'][i*3+2]
@@ -657,6 +658,37 @@ datex.setStyleSheet("#datex { font: arial; color: "+Config.textcolor+"; backgrou
 datex.setAlignment(Qt.AlignHCenter | Qt.AlignTop);
 datex.setGeometry(0,round(height*0.05),width,100)
 
+sunriseLabel = QtGui.QLabel(frame1)
+sunriseLabel.setObjectName("sunriseLabel")
+sunriseLabel.setStyleSheet("#sunriseLabel { background-color: transparent}")
+sunriseLabel.setAlignment(Qt.AlignHCenter | Qt.AlignTop);
+sunriseLabel.setGeometry(round(width*0.33),round(height*0.25),100,100)
+#scaled(wxicon.width(),wxicon.height(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+sunrisepixmap = QtGui.QPixmap(os.getcwd() + "/images/sunrise.png")
+sunriseLabel.setPixmap(sunrisepixmap.scaled(sunriseLabel.height(),sunriseLabel.width()))
+
+sunriseText = QtGui.QLabel(frame1)
+sunriseText.setObjectName("sunriseText")
+sunriseText.setStyleSheet("#sunriseText {font: arial; color: "+Config.textcolor+";background-color: transparent; font-size: "+str(int(50*xscale))+"px }")
+sunriseText.setAlignment(Qt.AlignLeft | Qt.AlignTop);
+sunriseText.setGeometry(round(width*0.39),round(height*0.27),200,100)
+
+# Sunset Info
+sunsetLabel = QtGui.QLabel(frame1)
+sunsetLabel.setObjectName("sunsetLabel")
+sunsetLabel.setStyleSheet("#sunsetLabel { background-color: transparent}")
+sunsetLabel.setAlignment(Qt.AlignHCenter | Qt.AlignTop);
+sunsetLabel.setGeometry(round(width*0.52),round(height*0.25),100,100)
+#scaled(wxicon.width(),wxicon.height(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+sunsetpixmap = QtGui.QPixmap(os.getcwd() + "/images/sunset.png")
+sunsetLabel.setPixmap(sunsetpixmap.scaled(sunsetLabel.height(),sunsetLabel.width()))
+
+sunsetText = QtGui.QLabel(frame1)
+sunsetText.setObjectName("sunsetText")
+sunsetText.setStyleSheet("#sunsetText {font: arial; color: "+Config.textcolor+";background-color: transparent; font-size: "+str(int(50*xscale))+"px }")
+sunsetText.setAlignment(Qt.AlignLeft | Qt.AlignTop);
+sunsetText.setGeometry(round(width*0.58),round(height*0.27),200,100)
+
 datex2 = QtGui.QLabel(frame2)
 datex2.setObjectName("datex2")
 datex2.setStyleSheet("#datex2 { font-family:sans-serif; color: "+Config.textcolor+"; background-color: transparent; font-size: "+str(int(50*xscale))+"px }")
@@ -668,7 +700,7 @@ datey2.setStyleSheet("#datey2 { font-family:sans-serif; color: "+Config.textcolo
 datey2.setAlignment(Qt.AlignHCenter | Qt.AlignTop);
 datey2.setGeometry(800*xscale,840*yscale,640*xscale,100)
 
-ypos = -25
+ypos = 0
 wxicon = QtGui.QLabel(frame1)
 wxicon.setObjectName("wxicon")
 wxicon.setStyleSheet("#wxicon { background-color: transparent; }")
@@ -706,27 +738,6 @@ temper2.setAlignment(Qt.AlignHCenter | Qt.AlignTop);
 temper2.setGeometry(125*xscale,780*yscale,300*xscale,100)
 
 ypos += 80
-press = QtGui.QLabel(frame1)
-press.setObjectName("press")
-press.setStyleSheet("#press { background-color: transparent; color: "+Config.textcolor+"; font-size: "+str(int(25*xscale))+"px }")
-press.setAlignment(Qt.AlignHCenter | Qt.AlignTop);
-press.setGeometry(3*xscale,ypos*yscale,300*xscale,100)
-
-ypos += 30
-humidity = QtGui.QLabel(frame1)
-humidity.setObjectName("humidity")
-humidity.setStyleSheet("#humidity { background-color: transparent; color: "+Config.textcolor+"; font-size: "+str(int(25*xscale))+"px }")
-humidity.setAlignment(Qt.AlignHCenter | Qt.AlignTop);
-humidity.setGeometry(3*xscale,ypos*yscale,300*xscale,100)
-
-ypos += 30
-wind = QtGui.QLabel(frame1)
-wind.setObjectName("wind")
-wind.setStyleSheet("#wind { background-color: transparent; color: "+Config.textcolor+"; font-size: "+str(int(20*xscale))+"px }")
-wind.setAlignment(Qt.AlignHCenter | Qt.AlignTop);
-wind.setGeometry(3*xscale,ypos*yscale,300*xscale,100)
-
-ypos += 20
 wind2 = QtGui.QLabel(frame1)
 wind2.setObjectName("wind2")
 wind2.setStyleSheet("#wind2 { background-color: transparent; color: "+Config.textcolor+"; font-size: "+str(int(20*xscale))+"px }")
@@ -779,7 +790,7 @@ for i in range(0,9):
 
     day = QtGui.QLabel(lab)
     day.setStyleSheet("#day { background-color: transparent; }")
-    day.setGeometry(100*xscale,80*yscale,200*xscale,20*yscale)
+    day.setGeometry(100*xscale,65*yscale,200*xscale,30*yscale)
     day.setAlignment(Qt.AlignRight | Qt.AlignBottom);
     day.setObjectName("day")
 
